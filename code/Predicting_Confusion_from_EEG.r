@@ -55,3 +55,23 @@ for (i in 1:fold) {
   #print(paste0("Accuracy(Logistic Regression): ", logistic_regression.accuracy[i]))
 }
 print(paste0(paste0("Accuracy of 5-fold Logistic Regression without Subject 6 = ", format(round(weighted.mean(logistic_regression.accuracy, n_fold)*100, 2), nsmall = 2)), "%"))
+
+# Visualization
+pdf("../result/plot_raw.pdf", paper = "USr", height = 8, width = 10)
+for (subject in 0:9) {
+  plot(1:nrow(eeg_raw[eeg_raw$SubjectID == subject & eeg_raw$VideoID == 0,]), eeg_raw[eeg_raw$SubjectID == subject & eeg_raw$VideoID == 0,]$Raw, main = paste0("Raw Plot of Subject ", subject), xlab = "Time", ylab = "Raw", type="l", col="#00000000")
+  for (i in 1:9) { 
+    if (eeg_raw[eeg_raw$SubjectID == subject & eeg_raw$VideoID == i,]$SelfDefinedConfusion[1] == 1) {
+      color = "#FF0000FF"
+    }
+    else {
+      color = "#00FF00FF"
+    }
+    lines(1:nrow(eeg_raw[eeg_raw$SubjectID == subject & eeg_raw$VideoID == i,]), eeg_raw[eeg_raw$SubjectID == subject & eeg_raw$VideoID == i,]$Raw, type="l", col=color) 
+  } 
+}
+dev.off()
+
+
+
+
