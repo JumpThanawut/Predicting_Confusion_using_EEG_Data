@@ -21,15 +21,37 @@ getCVIndex = function(n, fold) {
 cv_set = getCVIndex(n, fold)
 
 # Logistic Regression
+# Accuracy of 5-fold Logistic Regression = 60.01%
 logistic_regression.accuracy = rep(0, fold)
+n_fold = rep(0, fold)
 for (i in 1:fold) {
-  train = eeg_self[cv_set == i,]
-  test = eeg_self[cv_set != i,]
+  train = eeg_self[cv_set != i,]
+  test = eeg_self[cv_set == i,]
+  n_fold[i] = nrow(test)
   logistic_regression.model = glm(SelfDefinedConfusion~.-SubjectID-VideoID, data = train, family = "binomial")
-  print(summary(logistic_regression.model))
+  #print(summary(logistic_regression.model))
   logistic_regression.prob = predict(logistic_regression.model, newdata = test, type = "response")
   logistic_regression.pred = ifelse(logistic_regression.prob > 0.5, 1, 0)
   logistic_regression.accuracy[i] = mean(logistic_regression.pred == test$SelfDefinedConfusion)
   #print(paste0("Accuracy(Logistic Regression): ", logistic_regression.accuracy[i]))
 }
-print(paste0(paste0("Accuracy of 10-fold Logistic Regression = ", format(round(mean(logistic_regression.accuracy)*100, 2), nsmall = 2)), "%"))
+print(paste0(paste0("Accuracy of 5-fold Logistic Regression = ", format(round(weighted.mean(logistic_regression.accuracy, n_fold)*100, 2), nsmall = 2)), "%"))
+
+# Logistic Regression without Subject 6.
+# Accuracy of 5-fold Logistic Regression without Subject 6 = 60.72%. It is 0.71% higher than the one with Subject 6.
+logistic_regression.accuracy = rep(0, fold)
+n_fold = rep(0, fold)
+for (i in 1:fold) {
+  train = eeg_self[cv_set != i,]
+  test = eeg_self[cv_set == i,]
+  train = train[train$SubjectID != 6,]
+  test = test[test$SubjectID != 6,]
+  n_fold[i] = nrow(test)
+  logistic_regression.model = glm(SelfDefinedConfusion~.-SubjectID-VideoID, data = train, family = "binomial")
+  #print(summary(logistic_regression.model))
+  logistic_regression.prob = predict(logistic_regression.model, newdata = test, type = "response")
+  logistic_regression.pred = ifelse(logistic_regression.prob > 0.5, 1, 0)
+  logistic_regression.accuracy[i] = mean(logistic_regression.pred == test$SelfDefinedConfusion)
+  #print(paste0("Accuracy(Logistic Regression): ", logistic_regression.accuracy[i]))
+}
+print(paste0(paste0("Accuracy of 5-fold Logistic Regression without Subject 6 = ", format(round(weighted.mean(logistic_regression.accuracy, n_fold)*100, 2), nsmall = 2)), "%"))
