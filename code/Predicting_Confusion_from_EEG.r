@@ -8,7 +8,7 @@ cor(subset(eeg_self, select=-c(SelfDefinedConfusion)), eeg_self$SelfDefinedConfu
 
 # Cross-validation preparation
 n = nrow(eeg_self)
-fold = 10
+fold = 5
 getCVIndex = function(n, fold) {
   set.seed(1)
   cv_set = rep(0,n)
@@ -26,7 +26,7 @@ for (i in 1:fold) {
   train = eeg_self[cv_set == i,]
   test = eeg_self[cv_set != i,]
   logistic_regression.model = glm(SelfDefinedConfusion~.-SubjectID-VideoID, data = train, family = "binomial")
-  summary(logistic_regression.model)
+  print(summary(logistic_regression.model))
   logistic_regression.prob = predict(logistic_regression.model, newdata = test, type = "response")
   logistic_regression.pred = ifelse(logistic_regression.prob > 0.5, 1, 0)
   logistic_regression.accuracy[i] = mean(logistic_regression.pred == test$SelfDefinedConfusion)
