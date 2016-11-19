@@ -1,0 +1,218 @@
+---
+title: "EGG Brain Wave of Confusion"
+output: github_document
+---
+
+Remove subjectID and VideoID
+Reorder demographic feature to the first columns.
+```{r}
+eeg = eeg[c("age", "ethnicity", "gender", "Attention", "Meditation","Raw", "Delta", "Theta", "Alpha1", "Alpha2", "Beta1", "Beta2", "Gamma1", "Gamma2", "predefined_label","Self_defined_label")]
+sapply(eeg, class)
+```
+
+get plots of relations among all features and target
+```{r}
+plot(eeg)
+summary(eeg)
+pairs(eeg,col=eeg$predefined_label)
+hist(eeg$Gamma1)
+```
+
+```{r}
+eeg.fit = glm(predefined_label~., data = eeg, family = 'binomial')
+summary(eeg.fit)
+eeg.fit1 = glm(predefined_label~age+ethnicity+Raw+Beta1+Beta2+Gamma2, data = eeg, family = 'binomial')
+summary(eeg.fit1)
+eeg.fit2 = glm(predefined_label~age+ethnicity+Raw+Beta1*Beta2+Gamma2, data = eeg, family = 'binomial')
+summary(eeg.fit2)
+```
+
+```{r}
+library(dplyr)
+library(caret)
+train = sample_frac(eeg, 0.75)
+num = as.numeric(rownames(train))
+test = eeg[-num,]
+train.fit = knn3(predefined_label~age+ethnicity+Raw+Beta1+Beta2+Gamma2, data = eeg)
+summary(train.fit)
+probs = predict(train.fit, test)
+pred = rep(0, length(probs))
+pred[probs>=0.5] = 1
+mean(pred != test$predefined_label)
+```
+
+use glm to train and test data 
+```{r}
+#set.seed(1)
+library(MASS)
+data = eeg
+apply(data,2,function(x) sum(is.na(x)))
+index = sample(1:nrow(data),round(0.75*nrow(data)))
+train = data[index,]
+test = data[-index,]
+lm.fit = glm(predefined_label~., data=train)
+summary(lm.fit)
+pr.lm = predict(lm.fit,test)
+pred = rep(0, length(pr.lm))
+pred[pr.lm>=0.5] = 1
+mean(pred != test$predefined_label)
+MSE.lm = sum((pr.lm - test$predefined_label)^2)/nrow(test)
+MSE.lm
+```
+
+
+```{r}
+data = data[6:15]
+maxs = apply(data,2,max)
+mins = apply(data,2,min)
+scaled = as.data.frame(scale(data, center = mins, scale = maxs - mins))
+train_ = scaled[index,]
+test_ = scaled[-index,]
+library(neuralnet)
+n = names(train_)
+f = as.formula(paste("predefined_label ~", paste(n[!n %in% "predefined_label"], collapse = " + ")))
+nn = neuralnet(f,data=train_,hidden = 1)
+debugonce(nn) 
+plot(nn)
+resu = compute(nn, test_[,1:9])
+pred = rep(0, length(resu))
+pred[resu>=0.5] = 1
+mean(pred != test$predefined_label)
+```
+
+```{r}
+library("e1071")
+train = sample_frac(eeg, 0.75)
+num = as.numeric(rownames(train))
+test = eeg[-num,]
+train.fit = svm(predefined_label~., data = train)
+summary(train.fit)
+probs = predict(train.fit, test)
+pred = rep(0, length(probs))
+pred[probs>=0.5] = 1
+mean(pred != test$predefined_label)
+#66.66%
+```
+
+```{r}
+# Read EEG data from CSV
+eeg_raw = read.csv("EEG.csv")
+dim(eeg_raw)
+names(eeg_raw)
+# Remove SubjectID and VideoID
+eeg_noID = data.frame(eeg_raw[,-c(1,2,14)])
+eeg_noIDsub6 = eeg_raw[eeg_raw$SubjectID != 6,]
+eeg_noIDsub6 = data.frame(eeg_noIDsub6[,-c(1,2,14)])
+# Correlation Analysis
+cor(eeg_noID)
+```
+
+#data normalization:Standardize data columns
+```{r}
+library("e1071")
+library(caret)
+library(dplyr)
+library(class)
+set.seed(123)
+preObj = preProcess(eeg_noID[,-12], method=c("BoxCox"))
+dataNom = predict(preObj, eeg_noID)
+```
+
+#data normalization without subject6
+```{r}
+library("e1071")
+library(caret)
+library(dplyr)
+library(class)
+set.seed(123)
+preObj = preProcess(eeg_noIDsub6[,-12], method=c("BoxCox"))
+dataNom = predict(preObj, eeg_noIDsub6)
+```
+
+# No dataNorm
+```{r}
+set.seed(3286)
+random_vector = runif(length(eeg_noIDsub6$SelfDefinedConfusion))
+train = random_vector < 0.7
+test = !train
+train_num = sum(train == TRUE)
+test_num = sum(train == FALSE)
+train_set_noNor = eeg_noID[train,]
+test_set_noNor = eeg_noID[test,]
+```
+
+
+# Randomly separate data into train and test.
+```{r}
+set.seed(3286)
+random_vector = runif(length(dataNom$SelfDefinedConfusion))
+train = random_vector < 0.7
+test = !train
+train_num = sum(train == TRUE)
+test_num = sum(train == FALSE)
+train_set = dataNom[train,]
+test_set = dataNom[test,]
+```
+
+# Do Logistic Regression
+```{r}
+glm.fit = glm(SelfDefinedConfusion~., data = train_set_noNor, family = "binomial")
+summary(glm.fit)
+probs = predict(glm.fit, test_set_noNor, type = "response")
+pred = rep(0, length(probs))
+pred[probs>0.5] = 1
+mean(pred == test_set_noNor$SelfDefinedConfusion)
+# 60.2%
+# 60.0% without sub6
+```
+
+# Do SVM
+```{r}
+svm.fit = svm(SelfDefinedConfusion~., data = train_set_noNor)
+plot(svm.fit)
+summary(svm.fit)
+probs = predict(svm.fit, test_set_noNor)
+pred = rep(0, length(probs))
+pred[probs>0.5] = 1
+mean(pred == test_set_noNor$SelfDefinedConfusion)
+# 64.1%
+# 64.0% without sub6
+```
+
+# RandomForest
+```{r}
+#install.packages('randomForest', repos="http://cran.r-project.org")
+require(randomForest)
+require(MASS)
+set.seed(101)
+#tree.fit = tree(SelfDefinedConfusion~., data = train_set)
+rf.fit = randomForest(SelfDefinedConfusion~., data = train_set_noNor, ntree = 400)
+plot(rf.fit)
+summary(rf.fit)
+probs = predict(rf.fit, test_set_noNor)
+pred = rep(0, length(probs))
+pred[probs>0.5] = 1
+mean(pred == test_set_noNor$SelfDefinedConfusion)
+#67.4%
+#67.0% without sub6
+```
+
+# Boosting
+```{r}
+#install.packages('gbm', repos="http://cran.r-project.org")
+require(gbm)
+boost.eeg=gbm(SelfDefinedConfusion~.,data=train_set_noNor,distribution="gaussian",n.trees=6000,shrinkage=0.01,interaction.depth=4)
+summary(boost.eeg)
+n.trees=seq(from=100,to=10000,by=100)
+predmat=predict(boost.eeg,newdata=test_set_noNor,n.trees=6000)
+pred = rep(0, length(predmat))
+pred[predmat>0.5] = 1
+mean(pred == test_set_noNor$SelfDefinedConfusion)
+# 65.4%
+# 66.4% without sub6
+dim(predmat)
+berr=with(test_set,apply( (predmat-SelfDefinedConfusion)^2,2,mean))
+plot(n.trees,berr,pch=19,ylab="Mean Squared Error", xlab="# Trees",main="Boosting Test Error")
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
