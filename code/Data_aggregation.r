@@ -1,6 +1,6 @@
 eeg_raw = read.csv("EEG.csv")
 
-# aggregate every 20 rows(10 seconds) for each Subject and Video, which performs best
+# aggregate every 10 rows(5 seconds) for each Subject and Video, which performs best
 window = 10
 mylist = split(eeg_raw, eeg_raw$SubjectID)
 aggreData = data.frame()
