@@ -82,6 +82,7 @@ n_correct_example_lda = 0
 n_correct_example_qda = 0
 n_correct_example_knn = 0
 n_correct_example_tree = 0
+n_correct_example_rf = 0
 n_correct_example_svm = 0
 n_correct_example_nn = 0
 
@@ -103,7 +104,7 @@ for (subjectID in uniqueSubjectID) {
       n_correct_example = n_correct_example + 1
       print(paste0(subjectID, videoID))
     }
-    
+
     # linear discriminant analysis
     require(MASS)
     linear_discriminant_analysis.model = lda(SelfDefinedConfusion~.-SubjectID-VideoID, data = train)
@@ -132,7 +133,7 @@ for (subjectID in uniqueSubjectID) {
       n_correct_example_knn = n_correct_example_knn + 1
       print(paste0(subjectID, videoID))
     }
-    
+
     # decision tree
     require(ISLR)
     require(tree)
@@ -150,6 +151,13 @@ for (subjectID in uniqueSubjectID) {
 
     # random forest
     require(randomForest)
+    rf.model = randomForest(SelfDefinedConfusion~.-SubjectID-VideoID, data = train, mtry=5, ntree=100, cutoff = 2, importance=TRUE)
+    rf.probs = predict(rf.model,newdata = test)
+    rf.pred = rep(0, length(rf.probs))
+    rf.pred[rf.probs>=0.5] = 1
+    predict_class_rf = rf.pred
+    if (real_class == predict_class_rf) {
+      n_correct_example_rf = n_correct_example_rf + 1
       print(paste0(subjectID, videoID))
     }
 
@@ -185,6 +193,7 @@ accuracy_lda = n_correct_example_lda * 100 / n_example
 accuracy_qda = n_correct_example_qda * 100 / n_example
 accuracy_knn = n_correct_example_knn * 100 / n_example
 accuracy_tree = n_correct_example_tree * 100 / n_example
+accuracy_rf = n_correct_example_rf * 100 / n_example
 accuracy_svm = n_correct_example_svm * 100 / n_example
 accuracy_nn = n_correct_example_nn * 100 / n_example
 print(paste0("Accuracy(Leave One Subject-Video Out Logistic Regression): ", accuracy))
@@ -197,6 +206,7 @@ print(paste0("Accuracy(Leave One Subject-Video Out K Nearest Neighbor): ", accur
 # 61
 print(paste0("Accuracy(Leave One Subject-Video Out Decision Tree): ", accuracy_tree))
 # 56
+print(paste0("Accuracy(Leave One Subject-Video Out Random Forest): ", accuracy_rf))
 # 53
 print(paste0("Accuracy(Leave One Subject-Video Out Support Vector Machine): ", accuracy_svm))
 # 53
