@@ -16,9 +16,6 @@ plot(eeg)
 summary(eeg)
 pairs(eeg,col=eeg$predefined_label)
 hist(eeg$Gamma1)
-```
-
-```{r}
 eeg.fit = glm(predefined_label~., data = eeg, family = 'binomial')
 summary(eeg.fit)
 eeg.fit1 = glm(predefined_label~age+ethnicity+Raw+Beta1+Beta2+Gamma2, data = eeg, family = 'binomial')
@@ -27,73 +24,7 @@ eeg.fit2 = glm(predefined_label~age+ethnicity+Raw+Beta1*Beta2+Gamma2, data = eeg
 summary(eeg.fit2)
 ```
 
-```{r}
-library(dplyr)
-library(caret)
-train = sample_frac(eeg, 0.75)
-num = as.numeric(rownames(train))
-test = eeg[-num,]
-train.fit = knn3(predefined_label~age+ethnicity+Raw+Beta1+Beta2+Gamma2, data = eeg)
-summary(train.fit)
-probs = predict(train.fit, test)
-pred = rep(0, length(probs))
-pred[probs>=0.5] = 1
-mean(pred != test$predefined_label)
-```
-
-use glm to train and test data 
-```{r}
-#set.seed(1)
-library(MASS)
-data = eeg
-apply(data,2,function(x) sum(is.na(x)))
-index = sample(1:nrow(data),round(0.75*nrow(data)))
-train = data[index,]
-test = data[-index,]
-lm.fit = glm(predefined_label~., data=train)
-summary(lm.fit)
-pr.lm = predict(lm.fit,test)
-pred = rep(0, length(pr.lm))
-pred[pr.lm>=0.5] = 1
-mean(pred != test$predefined_label)
-MSE.lm = sum((pr.lm - test$predefined_label)^2)/nrow(test)
-MSE.lm
-```
-
-
-```{r}
-data = data[6:15]
-maxs = apply(data,2,max)
-mins = apply(data,2,min)
-scaled = as.data.frame(scale(data, center = mins, scale = maxs - mins))
-train_ = scaled[index,]
-test_ = scaled[-index,]
-library(neuralnet)
-n = names(train_)
-f = as.formula(paste("predefined_label ~", paste(n[!n %in% "predefined_label"], collapse = " + ")))
-nn = neuralnet(f,data=train_,hidden = 1)
-debugonce(nn) 
-plot(nn)
-resu = compute(nn, test_[,1:9])
-pred = rep(0, length(resu))
-pred[resu>=0.5] = 1
-mean(pred != test$predefined_label)
-```
-
-```{r}
-library("e1071")
-train = sample_frac(eeg, 0.75)
-num = as.numeric(rownames(train))
-test = eeg[-num,]
-train.fit = svm(predefined_label~., data = train)
-summary(train.fit)
-probs = predict(train.fit, test)
-pred = rep(0, length(probs))
-pred[probs>=0.5] = 1
-mean(pred != test$predefined_label)
-#66.66%
-```
-
+#Read csv file
 ```{r}
 # Read EEG data from CSV
 eeg_raw = read.csv("EEG.csv")
@@ -214,5 +145,3 @@ dim(predmat)
 berr=with(test_set,apply( (predmat-SelfDefinedConfusion)^2,2,mean))
 plot(n.trees,berr,pch=19,ylab="Mean Squared Error", xlab="# Trees",main="Boosting Test Error")
 ```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

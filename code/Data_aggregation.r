@@ -30,7 +30,7 @@ summary(glm.fit)
 probs = predict(glm.fit, test_set, type = "response")
 pred = rep(0, length(probs))
 pred[probs>0.5] = 1
-mean(pred == test_set$SelfDefinedConfusion)
+accuracy.lm=mean(pred == test_set$SelfDefinedConfusion)
 # 58.77%
 
 # Do SVM
@@ -40,7 +40,7 @@ summary(svm.fit)
 probs = predict(svm.fit, test_set)
 pred = rep(0, length(probs))
 pred[probs>0.5] = 1
-mean(pred == test_set$SelfDefinedConfusion)
+accuracy.svm=mean(pred == test_set$SelfDefinedConfusion)
 # 69.68%
 
 # RandomForest
@@ -55,7 +55,7 @@ summary(rf.fit)
 probs = predict(rf.fit, test_set)
 pred = rep(0, length(probs))
 pred[probs>0.5] = 1
-mean(pred == test_set$SelfDefinedConfusion)
+accuracy.RF=mean(pred == test_set$SelfDefinedConfusion)
 # 69.41%
 
 # Boosting
@@ -67,5 +67,13 @@ n.trees=seq(from=100,to=10000,by=100)
 predmat=predict(boost.eeg,newdata=test_set,n.trees=6000)
 pred = rep(0, length(predmat))
 pred[predmat>0.5] = 1
-mean(pred == test_set$SelfDefinedConfusion)
+accuracy.Boosting = mean(pred == test_set$SelfDefinedConfusion)
 # 65.96%
+
+print(paste0("Accuracy(Data Aggregation 5 seconds Logistic Regression): ", accuracy.lm))
+print(paste0("Accuracy(Data Aggregation 5 seconds SVM): ", accuracy.svm))
+print(paste0("Accuracy(Data Aggregation 5 seconds RandomForest): ", accuracy.RF))
+print(paste0("Accuracy(Data Aggregation 5 seconds Boosting): ", accuracy.Boosting))
+
+
+
