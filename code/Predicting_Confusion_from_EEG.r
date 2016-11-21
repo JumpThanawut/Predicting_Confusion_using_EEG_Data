@@ -81,6 +81,9 @@ n_correct_example = 0
 n_correct_example_lda = 0
 n_correct_example_qda = 0
 n_correct_example_knn = 0
+n_correct_example_tree = 0
+n_correct_example_svm = 0
+n_correct_example_nn = 0
 
 uniqueSubjectID = unique(eeg_self$SubjectID)
 for (subjectID in uniqueSubjectID) {
@@ -119,10 +122,11 @@ for (subjectID in uniqueSubjectID) {
       n_correct_example_qda = n_correct_example_qda + 1
       print(paste0(subjectID, videoID))
     }
-    
+
     # k nearest neighbor
     require(class)
-    knn.pred = knn(train, test, train$SelfDefinedConfusion, k=1)
+    # Have tried k=1,2,3,4,5,6,10,13,20,23,50,100. k=1 gets the highest accuracy.
+    knn.pred = knn(train, test, train$SelfDefinedConfusion, k = 1)
     predict_class_knn = knn.pred
     if (real_class == predict_class_knn) {
       n_correct_example_knn = n_correct_example_knn + 1
@@ -130,14 +134,59 @@ for (subjectID in uniqueSubjectID) {
     }
     
     # decision tree
+    require(ISLR)
     require(tree)
-    
+    decision_tree.model = tree(as.factor(SelfDefinedConfusion)~.-SubjectID-VideoID, data = train)
+    decision_tree.pred = predict(decision_tree.model, test, type = "class")
+    cv.decision_tree = cv.tree(decision_tree.model,FUN = prune.misclass)
+    prune.decision_tree = prune.misclass(decision_tree.model, best = 10)
+    decision_tree.pred = predict(prune.decision_tree, test, type = "class")
+
+    predict_class_tree = decision_tree.pred
+    if (real_class == predict_class_tree) {
+      n_correct_example_tree = n_correct_example_tree + 1
+      print(paste0(subjectID, videoID))
+    }
+
+    # random forest
+    require(randomForest)
+      print(paste0(subjectID, videoID))
+    }
+
+    # support vector machine
+    require("e1071")
+    svm.model = svm(SelfDefinedConfusion~.-SubjectID-VideoID, data = train, kernal = "poly")
+    svm.probs = predict(svm.model, test)
+    svm.pred = rep(0, length(svm.probs))
+    svm.pred[svm.probs>=0.5] = 1
+    # svm.pred = predict(svm.model, test)
+    predict_class_svm = svm.pred
+    if (real_class == predict_class_svm) {
+      n_correct_example_svm = n_correct_example_svm + 1
+      print(paste0(subjectID, videoID))
+    }
+
+    # neural network
+    require("nnet")
+    ideal_train = class.ind(train$SelfDefinedConfusion)
+    neural_network.model = nnet(train[-1-2-14], ideal_train, size=10, softmax=TRUE)
+    neural_network.pred = predict(neural_network.model, test, type = "class")
+    prediction_class_nn = neural_network.pred
+
+    if (real_class == prediction_class_nn) {
+      n_correct_example_nn = n_correct_example_nn + 1
+      print(paste0(subjectID, videoID))
+    }
   }
 }
+
 accuracy = n_correct_example * 100 / n_example
 accuracy_lda = n_correct_example_lda * 100 / n_example
 accuracy_qda = n_correct_example_qda * 100 / n_example
 accuracy_knn = n_correct_example_knn * 100 / n_example
+accuracy_tree = n_correct_example_tree * 100 / n_example
+accuracy_svm = n_correct_example_svm * 100 / n_example
+accuracy_nn = n_correct_example_nn * 100 / n_example
 print(paste0("Accuracy(Leave One Subject-Video Out Logistic Regression): ", accuracy))
 # 63
 print(paste0("Accuracy(Leave One Subject-Video Out Linear Discriminant Analysis Regression): ", accuracy_lda))
@@ -146,5 +195,10 @@ print(paste0("Accuracy(Leave One Subject-Video Out Quadratic Discriminant Analys
 # 50
 print(paste0("Accuracy(Leave One Subject-Video Out K Nearest Neighbor): ", accuracy_knn))
 # 61
-
-
+print(paste0("Accuracy(Leave One Subject-Video Out Decision Tree): ", accuracy_tree))
+# 56
+# 53
+print(paste0("Accuracy(Leave One Subject-Video Out Support Vector Machine): ", accuracy_svm))
+# 53
+print(paste0("Accuracy(Leave One Subject-Video Out Neural Network): ", accuracy_nn))
+# 55
