@@ -1,9 +1,20 @@
 eeg_raw = read.csv("EEG.csv")
 
-# aggregate every 20 rows(10 seconds), which performs best
-window = 20
-aggreData = aggregate(eeg_raw,list(rep(0:(nrow(eeg_raw)%/%window+1),each=window,len=nrow(eeg_raw))),mean)
-eeg_noID = data.frame(aggreData[,-c(1,2,3,15)])
+# aggregate every 20 rows(10 seconds) for each Subject and Video, which performs best
+window = 10
+mylist = split(eeg_raw, eeg_raw$SubjectID)
+aggreData = data.frame()
+for(one in mylist){
+    one = data.frame(one)
+    sublist=split(one, one$VideoID)
+    for(subone in sublist){
+      chunk = aggregate(subone,list(rep(0:(nrow(subone)%/%window+1),each=window,len=nrow(subone))),mean)
+      aggreData = rbind(aggreData, chunk)
+    }
+}
+
+eeg_noID = data.frame(aggreData[,-c(0,1,2,3,15)])
+eeg_noID = eeg_noID[!eeg_noID$SelfDefinedConfusion != 0 || 1]
 
 # data normalization
 library("e1071")
@@ -31,7 +42,7 @@ probs = predict(glm.fit, test_set, type = "response")
 pred = rep(0, length(probs))
 pred[probs>0.5] = 1
 accuracy.lm=mean(pred == test_set$SelfDefinedConfusion)
-# 62.16%
+# 67.68%
 
 # Do SVM
 svm.fit = svm(SelfDefinedConfusion~., data = train_set)
@@ -41,7 +52,7 @@ probs = predict(svm.fit, test_set)
 pred = rep(0, length(probs))
 pred[probs>0.5] = 1
 accuracy.svm=mean(pred == test_set$SelfDefinedConfusion)
-# 68.11%
+# 76.77%
 
 # RandomForest
 #install.packages('randomForest', repos="http://cran.r-project.org")
@@ -56,7 +67,7 @@ probs = predict(rf.fit, test_set)
 pred = rep(0, length(probs))
 pred[probs>0.5] = 1
 accuracy.RF=mean(pred == test_set$SelfDefinedConfusion)
-# 71.89%
+# 76.26%
 
 # Boosting
 #install.packages('gbm', repos="http://cran.r-project.org")
@@ -68,21 +79,21 @@ predmat=predict(boost.eeg,newdata=test_set,n.trees=6000)
 pred = rep(0, length(predmat))
 pred[predmat>0.5] = 1
 accuracy.Boosting = mean(pred == test_set$SelfDefinedConfusion)
-# 67.57%
+# 71.07%
 
-# knn
+# KNN
 require(class)
-# Have tried k=1,2,3,4,5,6,10,13,20,23,50,100. k=1 gets the highest accuracy.
-knn.pred = knn(train_set, test_set, train_set$SelfDefinedConfusion, k = 1)
-100*sum(test_set$SelfDefinedConfusion == knn.pred)/100
+knn.pred = knn(train_set, test_set, train_set$SelfDefinedConfusion, k = 5)
+accuracy.knn = sum(test_set$SelfDefinedConfusion == knn.pred)/nrow(test_set)
 table(knn.pred ,test_set$SelfDefinedConfusion)
-
+# 62.37%
 
 # print results
 print(paste0("Accuracy(Data Aggregation 5 seconds Logistic Regression): ", accuracy.lm))
 print(paste0("Accuracy(Data Aggregation 5 seconds SVM): ", accuracy.svm))
 print(paste0("Accuracy(Data Aggregation 5 seconds RandomForest): ", accuracy.RF))
 print(paste0("Accuracy(Data Aggregation 5 seconds Boosting): ", accuracy.Boosting))
+print(paste0("Accuracy(Data Aggregation 5 seconds KNN): ", accuracy.knn))
 
 
 
