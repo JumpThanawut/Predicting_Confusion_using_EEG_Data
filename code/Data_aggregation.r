@@ -1,7 +1,7 @@
 eeg_raw = read.csv("EEG.csv")
 
-# aggregate every 10 rows
-window = 10
+# aggregate every 20 rows(10 seconds), which performs best
+window = 20
 aggreData = aggregate(eeg_raw,list(rep(0:(nrow(eeg_raw)%/%window+1),each=window,len=nrow(eeg_raw))),mean)
 eeg_noID = data.frame(aggreData[,-c(1,2,3,15)])
 
@@ -31,7 +31,7 @@ probs = predict(glm.fit, test_set, type = "response")
 pred = rep(0, length(probs))
 pred[probs>0.5] = 1
 accuracy.lm=mean(pred == test_set$SelfDefinedConfusion)
-# 58.77%
+# 62.16%
 
 # Do SVM
 svm.fit = svm(SelfDefinedConfusion~., data = train_set)
@@ -41,7 +41,7 @@ probs = predict(svm.fit, test_set)
 pred = rep(0, length(probs))
 pred[probs>0.5] = 1
 accuracy.svm=mean(pred == test_set$SelfDefinedConfusion)
-# 69.68%
+# 68.11%
 
 # RandomForest
 #install.packages('randomForest', repos="http://cran.r-project.org")
@@ -56,7 +56,7 @@ probs = predict(rf.fit, test_set)
 pred = rep(0, length(probs))
 pred[probs>0.5] = 1
 accuracy.RF=mean(pred == test_set$SelfDefinedConfusion)
-# 69.41%
+# 71.89%
 
 # Boosting
 #install.packages('gbm', repos="http://cran.r-project.org")
@@ -68,8 +68,17 @@ predmat=predict(boost.eeg,newdata=test_set,n.trees=6000)
 pred = rep(0, length(predmat))
 pred[predmat>0.5] = 1
 accuracy.Boosting = mean(pred == test_set$SelfDefinedConfusion)
-# 65.96%
+# 67.57%
 
+# knn
+require(class)
+# Have tried k=1,2,3,4,5,6,10,13,20,23,50,100. k=1 gets the highest accuracy.
+knn.pred = knn(train_set, test_set, train_set$SelfDefinedConfusion, k = 1)
+100*sum(test_set$SelfDefinedConfusion == knn.pred)/100
+table(knn.pred ,test_set$SelfDefinedConfusion)
+
+
+# print results
 print(paste0("Accuracy(Data Aggregation 5 seconds Logistic Regression): ", accuracy.lm))
 print(paste0("Accuracy(Data Aggregation 5 seconds SVM): ", accuracy.svm))
 print(paste0("Accuracy(Data Aggregation 5 seconds RandomForest): ", accuracy.RF))
