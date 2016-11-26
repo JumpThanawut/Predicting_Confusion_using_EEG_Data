@@ -1,10 +1,10 @@
-eeg_raw = read.csv("EEG.csv")
+eeg_raw = read.csv("../data/EEG.csv")
 
 # aggregate every 10 rows(5 seconds) for each Subject and Video, which performs best
 window = 10
-mylist = split(eeg_raw, eeg_raw$SubjectID)
+eeg_rawListBySubjectID = split(eeg_raw, eeg_raw$SubjectID)
 aggreData = data.frame()
-for(one in mylist){
+for(one in eeg_rawListBySubjectID){
     one = data.frame(one)
     sublist=split(one, one$VideoID)
     for(subone in sublist){
@@ -13,7 +13,7 @@ for(one in mylist){
     }
 }
 
-eeg_noID = data.frame(aggreData[,-c(0,1,2,3,15)])
+eeg_noID = data.frame(aggreData[,-c(0,3,15)])
 eeg_noID = eeg_noID[!eeg_noID$SelfDefinedConfusion != 0 || 1]
 
 # data normalization
