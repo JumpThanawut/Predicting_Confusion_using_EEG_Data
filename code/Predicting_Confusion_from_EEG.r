@@ -102,6 +102,7 @@ n_correct_example_tree = 0
 n_correct_example_rf = 0
 n_correct_example_svm = 0
 n_correct_example_nn = 0
+n_correct_example_bst = 0
 
 uniqueSubjectID = unique(eeg_self$SubjectID)
 for (subjectID in uniqueSubjectID) {
@@ -205,6 +206,19 @@ for (subjectID in uniqueSubjectID) {
       n_correct_example_nn = n_correct_example_nn + 1
       print(paste0(subjectID, videoID))
     }
+    
+    # boosting
+    require(gbm)
+    bst.model = gbm(SelfDefinedConfusion~.-SubjectID-VideoID,data=train,distribution="gaussian",n.trees=6000,shrinkage=0.01,interaction.depth=4)
+    n.trees=seq(from=100,to=10000,by=100)
+    predmat=predict(bst.model,newdata=test,n.trees=6000)
+    boosting.pred = rep(0, length(predmat))
+    boosting.pred[predmat>0.5] = 1
+    prediction_class_nn = boosting.pred
+    if (real_class == prediction_class_nn) {
+      n_correct_example_bst = n_correct_example_bst + 1
+      print(paste0(subjectID, videoID))
+    }
   }
 }
 
@@ -216,6 +230,7 @@ accuracy_tree = n_correct_example_tree * 100 / n_example
 accuracy_rf = n_correct_example_rf * 100 / n_example
 accuracy_svm = n_correct_example_svm * 100 / n_example
 accuracy_nn = n_correct_example_nn * 100 / n_example
+accuracy_bst = n_correct_example_bst * 100 / n_example
 
 print(paste0("Accuracy(Leave One Subject-Video Out Logistic Regression): ", accuracy))
 # 63
@@ -233,6 +248,8 @@ print(paste0("Accuracy(Leave One Subject-Video Out Support Vector Machine): ", a
 # 53
 print(paste0("Accuracy(Leave One Subject-Video Out Neural Network): ", accuracy_nn))
 # 55
+print(paste0("Accuracy(Leave One Subject-Video Out Neural Network): ", accuracy_bst))
+# 
 
 # Cross-validation preparation with aggregated data
 aggre_eeg_self = subset(eeg_aggregated, select=-c(PreDefinedConfusion))
@@ -284,7 +301,7 @@ svm.fit = function(aggre_eeg_self, cv_set){
     svm.accuracy[i] = mean(svm.pred == test$SelfDefinedConfusion)
     print(paste0("Accuracy(SVM): ", svm.accuracy[i]))
   }
-  accuracy.svm = format(round(weighted.mean(svm.accuracy, n_fold)*100, 2), nsmall = 2)
+  accuracy.svm = round(weighted.mean(svm.accuracy, n_fold)*100, 2)
   return(accuracy.svm)
 }
 
@@ -303,7 +320,7 @@ rf.fit = function(aggre_eeg_self, cv_set){
     rf.accuracy[i] = mean(rf.pred == test$SelfDefinedConfusion)
     print(paste0("Accuracy(RandomForest): ", rf.accuracy[i]))
   }
-  accuracy.RF = format(round(weighted.mean(rf.accuracy, n_fold)*100, 2), nsmall = 2)
+  accuracy.RF = round(weighted.mean(rf.accuracy, n_fold)*100, 2)
   return(accuracy.RF)
 }
 
@@ -323,7 +340,7 @@ bst.fit = function(aggre_eeg_self, cv_set){
     bst.accuracy[i] = mean(bst.pred == test$SelfDefinedConfusion)
     print(paste0("Accuracy(Boosting): ", bst.accuracy[i]))
   }
-  accuracy.Boosting = format(round(weighted.mean(bst.accuracy, n_fold)*100, 2), nsmall = 2)
+  accuracy.Boosting = round(weighted.mean(bst.accuracy, n_fold)*100, 2)
   return(accuracy.Boosting)
 }
 
@@ -341,20 +358,20 @@ knn.fit = function(aggre_eeg_self, cv_set){
     knn.accuracy[i] = sum(test$SelfDefinedConfusion == knn.pred)/nrow(test)
     print(paste0("Accuracy(KNN): ", knn.accuracy[i]))
   }
-  accuracy.knn = format(round(weighted.mean(knn.accuracy, n_fold)*100, 2), nsmall = 2)
+  accuracy.knn = round(weighted.mean(knn.accuracy, n_fold)*100, 2)
   return(accuracy.knn)
 }
 
 print(paste0(paste0("Accuracy of 5-fold LogisticRegression with aggregated data = ", accuracy.lm), "%"))
-# 65.20%
+# 60.72%
 print(paste0(paste0("Accuracy of 5-fold SVM with aggregated data = ", accuracy.svm), "%"))
-# 68.11%
+# 68.12%
 print(paste0(paste0("Accuracy of 5-fold RandomForest with aggregated data = ", accuracy.RF), "%"))
 # 74.61%
 print(paste0(paste0("Accuracy of 5-fold Boosting with aggregated data = ", accuracy.Boosting), "%"))
 # 71.02%
 print(paste0(paste0("Accuracy of 5-fold KNN with aggregated data = ", accuracy.knn), "%"))
-# 63.13%
+# 63.11%
 
 # data normalization
 library("e1071")
@@ -412,7 +429,7 @@ for (i in 2:nrow(eeg_aggregated)){
 
 # Remove first row
 eeg_aggregated = eeg_aggregated[-1,]
-eeg_aggregated = eeg_aggregated[, -14]
+eeg_aggregated = eeg_aggregated[,-14]
 
 # cross validation
 n = nrow(eeg_aggregated)
@@ -435,9 +452,40 @@ accuracy.svm.d_aggre = svm.fit(eeg_aggregated, cv_set)
 accuracy.rf.d_aggre = rf.fit(eeg_aggregated, cv_set)
 accuracy.bst.d_aggre = bst.fit(eeg_aggregated, cv_set)
 
+# Normalization on aggregated data
+preObj = preProcess(eeg_aggregated[,-c(14)], method=c("BoxCox"))
+normAggre_d_eeg = predict(preObj, eeg_aggregated)
+
 # algorithms with aggregated$normalization d_data
-accuracy.lm.d_aggre = lm.fit(eeg_aggregated, cv_set)
-accuracy.knn.d_aggre = knn.fit(eeg_aggregated, cv_set)
-accuracy.svm.d_aggre = svm.fit(eeg_aggregated, cv_set)
-accuracy.rf.d_aggre = rf.fit(eeg_aggregated, cv_set)
-accuracy.bst.d_aggre = bst.fit(eeg_aggregated, cv_set)
+accuracy.lm.d_aggreNor = lm.fit(normAggre_d_eeg, cv_set)
+accuracy.knn.d_aggreNor = knn.fit(normAggre_d_eeg, cv_set)
+accuracy.svm.d_aggreNor = svm.fit(normAggre_d_eeg, cv_set)
+accuracy.rf.d_aggreNor = rf.fit(normAggre_d_eeg, cv_set)
+accuracy.bst.d_aggreNor = bst.fit(normAggre_d_eeg, cv_set)
+
+# plot accuracy vs different processed data
+accuracy.table = matrix(c(accuracy, accuracy_svm, accuracy_knn, accuracy_rf, accuracy_bst,
+                          accuracy.lm, accuracy.svm, accuracy.knn, accuracy.RF, accuracy.Boosting,
+                          accuracy.lm.norm, accuracy.svm.norm, accuracy.knn.norm, accuracy.rf.norm, accuracy.bst.norm,
+                          accuracy.lm.normAggre, accuracy.svm.normAggre, accuracy.knn.normAggre, accuracy.rf.normAggre, accuracy.bst.normAggre,
+                          accuracy.lm.d_aggre, accuracy.svm.d_aggreNor,accuracy.knn.d_aggreNor, accuracy.rf.d_aggreNor, accuracy.bst.d_aggre,
+                          accuracy.lm.d_aggreNor, accuracy.svm.d_aggreNor, accuracy.knn.d_aggreNor, accuracy.rf.d_aggreNor, accuracy.bst.d_aggreNor
+                          ),ncol=5,byrow=TRUE)
+
+colnames(accuracy.table) = c('lm','svm', 'knn', 'rf', 'bst')
+rownames(accuracy.table) = c('ori',"aggre","norm", "aggreNorm", 'd_aggre', 'd_aggreNor')
+accuracy.table = as.table(accuracy.table)
+
+library(reshape2)
+accuracy.long=melt(accuracy.table,id.vars="Algorithm")
+
+library(ggplot2)
+ggplot(accuracy.long,aes(x=Var1,y=value,fill=Var2))+
+  geom_bar(stat="identity",position="dodge")+
+  xlab("Different data procession")+ylab("Mean Accuracy")+
+  ggtitle("Accuracy Comparison")
+
+
+
+
+
