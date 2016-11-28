@@ -495,6 +495,8 @@ losocv.delta.aggregated = losocv(eeg_aggregated)
 # Result accuracy list of Leave-one-out-cross validation on Delta version of normalized aggregated eeg data: 63,54,53,52
 losocv.delta.aggregated.norm = losocv(normAggre_d_eeg)
 
+
+#########
 # plot accuracy vs different processed data
 accuracy.table = matrix(c(accuracy, accuracy_svm, accuracy_knn, accuracy_rf, accuracy_bst,
                           accuracy.lm, accuracy.svm, accuracy.knn, accuracy.RF, accuracy.Boosting,
@@ -517,6 +519,28 @@ ggplot(accuracy.long,aes(x=Var1,y=value,fill=Var2))+
   xlab("Different data procession")+ylab("Mean Accuracy")+
   ggtitle("Accuracy Comparison")
 
+#########
+# losocv: plot accuracy vs different processed data
+accuracy.table = matrix(c(losocv.original[1],losocv.original[2],losocv.original[3],losocv.original[4],losocv.original[5],losocv.original[6],losocv.original[7],losocv.original[8],losocv.original[9],
+                          losocv.norm[1],losocv.norm[2],losocv.norm[3],losocv.norm[4],losocv.norm[5],losocv.norm[6],losocv.norm[7],losocv.norm[8],losocv.norm[9],
+                          losocv.aggregated[1],losocv.aggregated[2],losocv.aggregated[3],losocv.aggregated[4],losocv.aggregated[5],losocv.aggregated[6],losocv.aggregated[7],losocv.aggregated[8],losocv.aggregated[9],
+                          losocv.aggregated.norm[1],losocv.aggregated.norm[2],losocv.aggregated.norm[3],losocv.aggregated.norm[4],losocv.aggregated.norm[5],losocv.aggregated.norm[6],losocv.aggregated.norm[7],losocv.aggregated.norm[8],losocv.aggregated.norm[9],
+                          losocv.delta.aggregated[1],losocv.delta.aggregated[2],losocv.delta.aggregated[3],losocv.delta.aggregated[4],losocv.delta.aggregated[5],losocv.delta.aggregated[6],losocv.delta.aggregated[7],losocv.delta.aggregated[8],losocv.delta.aggregated[9],
+                          losocv.delta.aggregated.norm[1],losocv.delta.aggregated.norm[2],losocv.delta.aggregated.norm[3],losocv.delta.aggregated.norm[4],losocv.delta.aggregated.norm[5],losocv.delta.aggregated.norm[6],losocv.delta.aggregated.norm[7],losocv.delta.aggregated.norm[8],losocv.delta.aggregated.norm[9]
+                          ),ncol=9,byrow=TRUE)
+
+colnames(accuracy.table) = c('lm','lda','qda','knn','tree','rf', 'svm', 'nn', 'bst')
+rownames(accuracy.table) = c('ori',"aggre","norm", "aggreNorm", 'd_aggre', 'd_aggreNor')
+accuracy.table = as.table(accuracy.table)
+
+# library(reshape2)
+# accuracy.long=melt(accuracy.table,id.vars="Algorithm")
+# 
+# library(ggplot2)
+# ggplot(accuracy.long,aes(x=Var1,y=value,fill=Var2))+
+#   geom_bar(stat="identity",position="dodge")+
+#   xlab("Different data procession")+ylab("Mean Accuracy")+
+#   ggtitle("Accuracy Comparison")
 
 
 
