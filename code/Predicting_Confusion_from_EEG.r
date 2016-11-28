@@ -170,70 +170,70 @@ losocv = function(eeg_self) {
         print(paste0(subjectID, videoID))
       }
   
-      # # decision tree
-      # require(ISLR)
-      # require(tree)
-      # decision_tree.model = tree(as.factor(SelfDefinedConfusion)~.-SubjectID-VideoID, data = as.factor(train))
-      # decision_tree.pred = predict(decision_tree.model, test, type = "class")
-      # cv.decision_tree = cv.tree(decision_tree.model,FUN = prune.misclass)
-      # prune.decision_tree = prune.misclass(decision_tree.model, best = 10)
-      # decision_tree.pred = predict(prune.decision_tree, test, type = "class")
-      # 
-      # predict_class_tree = decision_tree.pred
-      # if (real_class == predict_class_tree) {
-      #   n_correct_example_tree = n_correct_example_tree + 1
-      #   print(paste0(subjectID, videoID))
-      # }
-      # 
-      # # random forest
-      # require(randomForest)
-      # rf.model = randomForest(SelfDefinedConfusion~.-SubjectID-VideoID, data = train, mtry=5, ntree=100, cutoff = 2, importance=TRUE)
-      # rf.probs = predict(rf.model,newdata = test)
-      # rf.pred = rep(0, length(rf.probs))
-      # rf.pred[rf.probs>=0.5] = 1
-      # predict_class_rf = rf.pred
-      # if (real_class == predict_class_rf) {
-      #   n_correct_example_rf = n_correct_example_rf + 1
-      #   print(paste0(subjectID, videoID))
-      # }
+      # decision tree
+      require(ISLR)
+      require(tree)
+      decision_tree.model = tree(as.factor(SelfDefinedConfusion)~.-SubjectID-VideoID, data = train)
+      decision_tree.pred = predict(decision_tree.model, test, type = "class")
+      cv.decision_tree = cv.tree(decision_tree.model,FUN = prune.misclass)
+      prune.decision_tree = prune.misclass(decision_tree.model, best = 10)
+      decision_tree.pred = predict(prune.decision_tree, test, type = "class")
 
-      # # support vector machine
-      # require("e1071")
-      # svm.model = svm(SelfDefinedConfusion~.-SubjectID-VideoID, data = train, kernal = "poly")
-      # svm.probs = predict(svm.model, test)
-      # svm.pred = rep(0, length(svm.probs))
-      # svm.pred[svm.probs>=0.5] = 1
-      # # svm.pred = predict(svm.model, test)
-      # predict_class_svm = svm.pred
-      # if (real_class == predict_class_svm) {
-      #   n_correct_example_svm = n_correct_example_svm + 1
-      #   print(paste0(subjectID, videoID))
-      # }
-      # 
-      # # neural network
-      # require("nnet")
-      # ideal_train = class.ind(train$SelfDefinedConfusion)
-      # neural_network.model = nnet(train[-1-2-14], ideal_train, size=10, softmax=TRUE)
-      # neural_network.pred = predict(neural_network.model, test, type = "class")
-      # prediction_class_nn = neural_network.pred
-      # 
-      # if (real_class == prediction_class_nn) {
-      #   n_correct_example_nn = n_correct_example_nn + 1
-      #   print(paste0(subjectID, videoID))
-      # }
-      # 
-      # # boosting
-      # require(gbm)
-      # bst.model = gbm(SelfDefinedConfusion~.-SubjectID-VideoID,data=train,distribution="gaussian",n.trees=6000,shrinkage=0.01,interaction.depth=4)
-      # n.trees=seq(from=100,to=10000,by=100)
-      # predmat=predict(bst.model,newdata=test,n.trees=6000)
-      # boosting.pred = rep(0, length(predmat))
-      # boosting.pred[predmat>0.5] = 1
-      # prediction_class_nn = boosting.pred
-      # if (real_class == prediction_class_nn) {
-      #   n_correct_example_bst = n_correct_example_bst + 1
-      #   print(paste0(subjectID, videoID))
-      # }
+      predict_class_tree = decision_tree.pred
+      if (real_class == predict_class_tree) {
+        n_correct_example_tree = n_correct_example_tree + 1
+        print(paste0(subjectID, videoID))
+      }
+
+      # random forest
+      require(randomForest)
+      rf.model = randomForest(SelfDefinedConfusion~.-SubjectID-VideoID, data = train, mtry=5, ntree=100, cutoff = 2, importance=TRUE)
+      rf.probs = predict(rf.model,newdata = test)
+      rf.pred = rep(0, length(rf.probs))
+      rf.pred[rf.probs>=0.5] = 1
+      predict_class_rf = rf.pred
+      if (real_class == predict_class_rf) {
+        n_correct_example_rf = n_correct_example_rf + 1
+        print(paste0(subjectID, videoID))
+      }
+
+      # support vector machine
+      require("e1071")
+      svm.model = svm(SelfDefinedConfusion~.-SubjectID-VideoID, data = train, kernal = "poly")
+      svm.probs = predict(svm.model, test)
+      svm.pred = rep(0, length(svm.probs))
+      svm.pred[svm.probs>=0.5] = 1
+      svm.pred = predict(svm.model, test)
+      predict_class_svm = svm.pred
+      if (real_class == predict_class_svm) {
+        n_correct_example_svm = n_correct_example_svm + 1
+        print(paste0(subjectID, videoID))
+      }
+
+      # neural network
+      require("nnet")
+      ideal_train = class.ind(train$SelfDefinedConfusion)
+      neural_network.model = nnet(train[-1-2-14], ideal_train, size=10, softmax=TRUE)
+      neural_network.pred = predict(neural_network.model, test, type = "class")
+      prediction_class_nn = neural_network.pred
+
+      if (real_class == prediction_class_nn) {
+        n_correct_example_nn = n_correct_example_nn + 1
+        print(paste0(subjectID, videoID))
+      }
+
+      # boosting
+      require(gbm)
+      bst.model = gbm(SelfDefinedConfusion~.-SubjectID-VideoID,data=train,distribution="gaussian",n.trees=6000,shrinkage=0.01,interaction.depth=4)
+      n.trees=seq(from=100,to=10000,by=100)
+      predmat=predict(bst.model,newdata=test,n.trees=6000)
+      boosting.pred = rep(0, length(predmat))
+      boosting.pred[predmat>0.5] = 1
+      prediction_class_nn = boosting.pred
+      if (real_class == prediction_class_nn) {
+        n_correct_example_bst = n_correct_example_bst + 1
+        print(paste0(subjectID, videoID))
+      }
     }
   }
   
@@ -418,13 +418,13 @@ accuracy.svm.normAggre = svm.fit(normAggre_eeg, cv_set)
 accuracy.rf.normAggre = rf.fit(normAggre_eeg, cv_set)
 accuracy.bst.normAggre = bst.fit(normAggre_eeg, cv_set)
 
-# Result accuracy list of Leave-one-out-cross validation on original eeg data: 63,52,50,61
+# Result accuracy list of Leave-one-out-cross validation on original eeg data: 63,52,50,61,56
 losocv.original = losocv(eeg_self)
-# Result accuracy list of Leave-one-out-cross validation on normalized eeg data: 62,49,44,64
+# Result accuracy list of Leave-one-out-cross validation on normalized eeg data: 62,49,44,64,56
 losocv.norm = losocv(norm_eeg)
-# Result accuracy list of Leave-one-out-cross validation on aggregated eeg data: 63,55,55,61
+# Result accuracy list of Leave-one-out-cross validation on aggregated eeg data: 68,53,47,43,55
 losocv.aggregated = losocv(eeg_aggregated)
-# Result accuracy list of Leave-one-out-cross validation on normalized aggregated eeg data: 61,57,49,55
+# Result accuracy list of Leave-one-out-cross validation on normalized aggregated eeg data: 61,57,49,55,60
 losocv.aggregated.norm = losocv(normAggre_eeg)
 
 # Add more features related to delta
