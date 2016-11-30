@@ -538,14 +538,16 @@ Plot accuracy of normal cross-validation and leave one Subject-Video out cross-v
 # Normal cross-validation: plot accuracy vs different processed data
 accuracy.table = matrix(c(accuracy, accuracy_svm, accuracy_knn, accuracy_rf, accuracy_bst,
                           accuracy.lm, accuracy.svm, accuracy.knn, accuracy.RF, accuracy.Boosting,
-                          accuracy.lm.norm, accuracy.svm.norm, accuracy.knn.norm, accuracy.rf.norm, accuracy.bst.norm,
-                          accuracy.lm.normAggre, accuracy.svm.normAggre, accuracy.knn.normAggre, accuracy.rf.normAggre, accuracy.bst.normAggre,
-                          accuracy.lm.d_aggre, accuracy.svm.d_aggreNor,accuracy.knn.d_aggreNor, accuracy.rf.d_aggreNor, accuracy.bst.d_aggre,
-                          accuracy.lm.d_aggreNor, accuracy.svm.d_aggreNor, accuracy.knn.d_aggreNor, accuracy.rf.d_aggreNor, accuracy.bst.d_aggreNor
-                          ),ncol=5,byrow=TRUE)
+                          accuracy.lm.norm, accuracy.svm.norm, accuracy.knn.norm, accuracy.rf.norm,      
+                          accuracy.bst.norm,accuracy.lm.normAggre, accuracy.svm.normAggre, 
+                          accuracy.knn.normAggre, accuracy.rf.normAggre, accuracy.bst.normAggre,
+                          accuracy.lm.d_aggre, accuracy.svm.d_aggreNor,accuracy.knn.d_aggreNor, 
+                          accuracy.rf.d_aggreNor, accuracy.bst.d_aggre,accuracy.lm.d_aggreNor, 
+                          accuracy.svm.d_aggreNor, accuracy.knn.d_aggreNor, accuracy.rf.d_aggreNor, 
+                          accuracy.bst.d_aggreNor),ncol=5,byrow=TRUE)
 
-colnames(accuracy.table) = c('lm','svm', 'knn', 'rf', 'bst')
-rownames(accuracy.table) = c('ori',"aggre","norm", "aggreNorm", 'd_aggre', 'd_aggreNor')
+colnames(accuracy.table) = c('logistic regression','support vector machine', 'k-nearest', 'randomForest', 'boosting')
+rownames(accuracy.table) = c('original',"aggregated","normalization", "aggregated$Normalization", 'delta_aggregated', 'delta_aggregated$Normalization')
 accuracy.table = as.table(accuracy.table)
 
 library(reshape2)
@@ -554,16 +556,24 @@ accuracy.long=melt(accuracy.table,id.vars="Algorithm")
 library(ggplot2)
 ggplot(accuracy.long,aes(x=Var1,y=value,fill=Var2))+
   geom_bar(stat="identity",position="dodge")+
-  xlab("Different data procession")+ylab("Mean Accuracy")+
+  xlab("Different data processing")+ylab("Mean Accuracy")+
   ggtitle("Accuracy Comparison")
 
 # Leave one Subject-Video out cross-validation: plot accuracy vs different processed data
-accuracy.table = matrix(unlist(c(losocv.original[1],losocv.original[2],losocv.original[3],losocv.original[4],losocv.original[5],losocv.original[6],losocv.original[7],losocv.original[8],
-                          losocv.norm[1],losocv.norm[2],losocv.norm[3],losocv.norm[4],losocv.norm[5],losocv.norm[6],losocv.norm[7],losocv.norm[8],
-                          losocv.aggregated[1],losocv.aggregated[2],losocv.aggregated[3],losocv.aggregated[4],losocv.aggregated[5],losocv.aggregated[6],losocv.aggregated[7],losocv.aggregated[8],
-                          losocv.aggregated.norm[1],losocv.aggregated.norm[2],losocv.aggregated.norm[3],losocv.aggregated.norm[4],losocv.aggregated.norm[5],losocv.aggregated.norm[6],losocv.aggregated.norm[7],losocv.aggregated.norm[8],
-                          losocv.delta.aggregated[1],losocv.delta.aggregated[2],losocv.delta.aggregated[3],losocv.delta.aggregated[4],losocv.delta.aggregated[5],losocv.delta.aggregated[6],losocv.delta.aggregated[7],losocv.delta.aggregated[8],
-                          losocv.delta.aggregated.norm[1],losocv.delta.aggregated.norm[2],losocv.delta.aggregated.norm[3],losocv.delta.aggregated.norm[4],losocv.delta.aggregated.norm[5],losocv.delta.aggregated.norm[6],losocv.delta.aggregated.norm[7],losocv.delta.aggregated.norm[8]
+accuracy.table = matrix(unlist(c(losocv.original[1],losocv.original[2],losocv.original[3],losocv.original[4],
+                                 losocv.original[5],losocv.original[6],losocv.original[7],losocv.original[8],                                                        losocv.norm[1],losocv.norm[2],losocv.norm[3],losocv.norm[4],losocv.norm[5],
+                                 losocv.norm[6],losocv.norm[7],losocv.norm[8],losocv.aggregated[1],
+                                 losocv.aggregated[2],losocv.aggregated[3],losocv.aggregated[4],
+                                 losocv.aggregated[5],losocv.aggregated[6],losocv.aggregated[7],
+                                 losocv.aggregated[8],losocv.aggregated.norm[1],losocv.aggregated.norm[2],
+                                 losocv.aggregated.norm[3],losocv.aggregated.norm[4],losocv.aggregated.norm[5],
+                                 losocv.aggregated.norm[6],losocv.aggregated.norm[7],losocv.aggregated.norm[8],
+                                 losocv.delta.aggregated[1],losocv.delta.aggregated[2],losocv.delta.aggregated[3],
+                                 losocv.delta.aggregated[4],losocv.delta.aggregated[5],losocv.delta.aggregated[6],
+                                 losocv.delta.aggregated[7],losocv.delta.aggregated[8],losocv.delta.aggregated.norm[1],
+                                 losocv.delta.aggregated.norm[2],losocv.delta.aggregated.norm[3],
+                                 losocv.delta.aggregated.norm[4],losocv.delta.aggregated.norm[5],
+                                 losocv.delta.aggregated.norm[6],losocv.delta.aggregated.norm[7],losocv.delta.aggregated.norm[8]
                           )),nrow=6,byrow=TRUE)
 
 colnames(accuracy.table) = c('lm','lda','qda','knn','tree','rf', 'svm', 'nn')
@@ -575,6 +585,6 @@ accuracy.long=melt(accuracy.table)
 library(ggplot2)
 ggplot(accuracy.long,aes(x=Var1,y=value,fill=Var2))+
   geom_bar(stat="identity",position="dodge")+
-  xlab("Different data procession")+ylab("Mean Accuracy")+
+  xlab("Different data processing")+ylab("Mean Accuracy")+
   ggtitle("LOSOCV Accuracy Comparison")
 ```

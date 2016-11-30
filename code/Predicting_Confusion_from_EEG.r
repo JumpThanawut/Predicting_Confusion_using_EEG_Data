@@ -507,15 +507,16 @@ accuracy.table = matrix(c(accuracy, accuracy_svm, accuracy_knn, accuracy_rf, acc
                           accuracy.lm.d_aggreNor, accuracy.svm.d_aggreNor, accuracy.knn.d_aggreNor, accuracy.rf.d_aggreNor, accuracy.bst.d_aggreNor
                           ),ncol=5,byrow=TRUE)
 
-colnames(accuracy.table) = c('lm','svm', 'knn', 'rf', 'bst')
-rownames(accuracy.table) = c('ori',"aggre","norm", "aggreNorm", 'd_aggre', 'd_aggreNor')
+colnames(accuracy.table) = c('logistic regression','support vector machine', 'k-nearest', 'randomForest', 'boosting')
+rownames(accuracy.table) = c('original',"aggregated","normalization", "aggregated$Normalization", 'delta_aggregated', 'delta_aggregated$Normalization')
 accuracy.table = as.table(accuracy.table)
 
 library(reshape2)
 accuracy.long=melt(accuracy.table,id.vars="Algorithm")
+colnames(accuracy.long) = c("datapro", "Algorithm", "value")
 
 library(ggplot2)
-ggplot(accuracy.long,aes(x=Var1,y=value,fill=Var2))+
+ggplot(accuracy.long,aes(x=datapro,y=value,fill=Algorithm))+
   geom_bar(stat="identity",position="dodge")+
   xlab("Different data procession")+ylab("Mean Accuracy")+
   ggtitle("Accuracy Comparison")
