@@ -353,6 +353,7 @@ svm.fit = function(aggre_eeg_self, cv_set){
 }
 
 # RandomForest with aggregated data
+require(randomForest)
 rf.fit = function(aggre_eeg_self, cv_set){
   rf.accuracy = rep(0, fold)
   n_fold = rep(0, fold)
@@ -372,6 +373,7 @@ rf.fit = function(aggre_eeg_self, cv_set){
 }
 
 # Boosting with aggregated data
+require(gbm)
 bst.fit = function(aggre_eeg_self, cv_set){
   bst.accuracy = rep(0, fold)
   n_fold = rep(0, fold)
@@ -409,15 +411,15 @@ knn.fit = function(aggre_eeg_self, cv_set){
   return(accuracy.knn)
 }
 
-print(paste0(paste0("Accuracy of 5-fold LogisticRegression with aggregated data = ", accuracy.lm), "%"))
-# 60.72%
-print(paste0(paste0("Accuracy of 5-fold SVM with aggregated data = ", accuracy.svm), "%"))
+print(paste0(paste0("Accuracy of 5-fold LogisticRegression with aggregated data = ", lm.fit(aggre_eeg_self, cv_set)), "%"))
+# 65.20%
+print(paste0(paste0("Accuracy of 5-fold SVM with aggregated data = ", svm.fit(aggre_eeg_self, cv_set)), "%"))
 # 68.12%
-print(paste0(paste0("Accuracy of 5-fold RandomForest with aggregated data = ", accuracy.RF), "%"))
-# 74.61%
-print(paste0(paste0("Accuracy of 5-fold Boosting with aggregated data = ", accuracy.Boosting), "%"))
-# 71.02%
-print(paste0(paste0("Accuracy of 5-fold KNN with aggregated data = ", accuracy.knn), "%"))
+print(paste0(paste0("Accuracy of 5-fold RandomForest with aggregated data = ", rf.fit(aggre_eeg_self, cv_set)), "%"))
+# 74.09%
+print(paste0(paste0("Accuracy of 5-fold Boosting with aggregated data = ", bst.fit(aggre_eeg_self, cv_set)), "%"))
+# 71.25%
+print(paste0(paste0("Accuracy of 5-fold KNN with aggregated data = ", knn.fit(aggre_eeg_self, cv_set)), "%"))
 # 63.11%
 ```
 

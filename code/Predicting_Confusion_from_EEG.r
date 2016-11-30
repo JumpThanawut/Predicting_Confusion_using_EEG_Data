@@ -203,7 +203,6 @@ losocv = function(eeg_self) {
       svm.probs = predict(svm.model, test)
       svm.pred = rep(0, length(svm.probs))
       svm.pred[svm.probs>=0.5] = 1
-      svm.pred = predict(svm.model, test)
       predict_class_svm = svm.pred
       if (real_class == predict_class_svm) {
         n_correct_example_svm = n_correct_example_svm + 1
