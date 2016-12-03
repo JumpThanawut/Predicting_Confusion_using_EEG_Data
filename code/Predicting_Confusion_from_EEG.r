@@ -507,13 +507,9 @@ accuracy.table = matrix(c(accuracy, accuracy_svm, accuracy_knn, accuracy_rf, acc
                           accuracy.lm.d_aggreNor, accuracy.svm.d_aggreNor, accuracy.knn.d_aggreNor, accuracy.rf.d_aggreNor, accuracy.bst.d_aggreNor
                           ),ncol=5,byrow=TRUE)
 
-<<<<<<< HEAD
+
 colnames(accuracy.table) = c('logistic regression','support vector machine', 'k-nearest', 'randomForest', 'boosting')
 rownames(accuracy.table) = c('original',"aggregated","normalization", "aggregated$Normalization", 'delta_aggregated', 'delta_aggregated$Normalization')
-=======
-colnames(accuracy.table) = c('Logistic Regression','SVM', 'KNN', 'Random Forest', 'Boosting')
-rownames(accuracy.table) = c('original',"aggregated","normalized", "aggregated normalized", 'delta aggregated', 'delta aggregated normalized')
->>>>>>> 54703f76d0e036261a922eb6fb0d53020630feae
 accuracy.table = as.table(accuracy.table)
 
 library(reshape2)
