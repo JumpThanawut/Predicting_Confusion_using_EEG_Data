@@ -3,15 +3,6 @@ eeg_raw = read.csv("../data/EEG.csv")
 # Remove pre-defined confusion. We will use self-defined confusion as a target.
 eeg_self = subset(eeg_raw, select=-c(PreDefinedConfusion))
 
-# Get normalized data
-library("e1071")
-library(caret)
-library(dplyr)
-library(class)
-set.seed(123)
-preObj = preProcess(eeg_self[,-c(1,2,12)], method=c("BoxCox"))
-norm_eeg = predict(preObj, eeg_self)
-
 # See correlation of features and target. Max is 0.15. Min is -0.12. No strong correlation of features and target has been found.
 cor(subset(eeg_self, select=-c(SelfDefinedConfusion)), eeg_self$SelfDefinedConfusion)
 
@@ -33,8 +24,8 @@ eeg_aggregated = aggreData[,-c(1)]
 eeg_aggregated = eeg_aggregated[!eeg_aggregated$SelfDefinedConfusion != 0 || 1]
 
 # Get normalized aggregated data
-preObj = preProcess(eeg_aggregated[,-c(12)], method=c("BoxCox"))
-normAggre_eeg = predict(preObj, eeg_aggregated)
+#preObj = preProcess(eeg_aggregated[,-c(1,2,14)], method=c("BoxCox"))
+#normAggre_eeg = predict(preObj, eeg_aggregated)
 
 # Cross-validation preparation
 n = nrow(eeg_self)
@@ -392,13 +383,25 @@ print(paste0(paste0("Accuracy of 5-fold Boosting with aggregated data = ", bst.f
 print(paste0(paste0("Accuracy of 5-fold KNN with aggregated data = ", knn.fit(aggre_eeg_self, cv_set)), "%"))
 # 63.11%
 
+accuracy = lm.fit(eeg_self, cv_set)
+accuracy_svm = svm.fit(eeg_self, cv_set)
+accuracy_knn = knn.fit(eeg_self, cv_set)
+accuracy_rf = rf.fit(eeg_self, cv_set)
+accuracy_bst = bst.fit(eeg_self, cv_set)
+
+accuracy.lm = lm.fit(aggre_eeg_self, cv_set)
+accuracy.svm = svm.fit(aggre_eeg_self, cv_set)
+accuracy.knn = knn.fit(aggre_eeg_self, cv_set)
+accuracy.rf = rf.fit(aggre_eeg_self, cv_set)
+accuracy.bst = bst.fit(aggre_eeg_self, cv_set)
+
 # data normalization
 library("e1071")
 library(caret)
 library(dplyr)
 library(class)
 set.seed(123)
-preObj = preProcess(eeg_self[,-c(1,2,12)], method=c("BoxCox"))
+preObj = preProcess(eeg_self[,-c(1,2,14)], method=c("range"))
 norm_eeg = predict(preObj, eeg_self)
 
 # algorithms with normalized data
@@ -409,7 +412,7 @@ accuracy.rf.norm = rf.fit(norm_eeg, cv_set)
 accuracy.bst.norm = bst.fit(norm_eeg, cv_set)
 
 # Normalization on aggregated data
-preObj = preProcess(eeg_aggregated[,-c(12)], method=c("BoxCox"))
+preObj = preProcess(eeg_aggregated[,-c(1,2,14)], method=c("range"))
 normAggre_eeg = predict(preObj, eeg_aggregated)
 
 # algorithms with normalized$aggregated data
@@ -481,7 +484,7 @@ accuracy.rf.d_aggre = rf.fit(eeg_aggregated, cv_set)
 accuracy.bst.d_aggre = bst.fit(eeg_aggregated, cv_set)
 
 # Normalization on aggregated data
-preObj = preProcess(eeg_aggregated[,-c(14)], method=c("BoxCox"))
+preObj = preProcess(eeg_aggregated[,-c(14)], method=c("range"))
 normAggre_d_eeg = predict(preObj, eeg_aggregated)
 
 # algorithms with aggregated$normalization d_data
@@ -500,7 +503,7 @@ losocv.delta.aggregated.norm = losocv(normAggre_d_eeg)
 #########
 # plot accuracy vs different processed data
 accuracy.table = matrix(c(accuracy, accuracy_svm, accuracy_knn, accuracy_rf, accuracy_bst,
-                          accuracy.lm, accuracy.svm, accuracy.knn, accuracy.RF, accuracy.Boosting,
+                          accuracy.lm, accuracy.svm, accuracy.knn, accuracy.rf, accuracy.bst,
                           accuracy.lm.norm, accuracy.svm.norm, accuracy.knn.norm, accuracy.rf.norm, accuracy.bst.norm,
                           accuracy.lm.normAggre, accuracy.svm.normAggre, accuracy.knn.normAggre, accuracy.rf.normAggre, accuracy.bst.normAggre,
                           accuracy.lm.d_aggre, accuracy.svm.d_aggreNor,accuracy.knn.d_aggreNor, accuracy.rf.d_aggreNor, accuracy.bst.d_aggre,
